@@ -1,0 +1,230 @@
+.history {
+  max-width: 900px;
+  animation: fadeUp 0.3s ease;
+}
+
+.history__header {
+  margin-bottom: 24px;
+}
+
+.history__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.history__subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.history__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 80px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.history__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 80px 0;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.history__empty-icon {
+  font-size: 40px;
+  opacity: 0.4;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.history__empty p {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.history__empty span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* History Card */
+.history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.history-card:hover {
+  border-color: var(--border-hover);
+}
+
+.history-card.expanded {
+  border-color: var(--accent);
+}
+
+.history-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.history-card__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.history-card__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.history-card__source {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+
+.history-card__meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.history-card__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.history-card__delete {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.history-card__delete:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+/* History Card Body */
+.history-card__body {
+  border-top: 1px solid var(--border);
+  padding: 12px 16px 16px;
+  animation: fadeUp 0.2s ease;
+}
+
+/* Test Case List inside History */
+.history-tc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-tc-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  overflow: hidden;
+}
+
+.history-tc-card:hover {
+  border-color: var(--border-hover);
+}
+
+.history-tc-card.expanded {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+
+.history-tc-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  gap: 10px;
+}
+
+/* Reuse tc-card styles from TestGen.css */
+.history-tc-card .tc-card__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.history-tc-card .tc-card__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.history-tc-card .tc-card__body {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+  animation: fadeUp 0.2s ease;
+}
+
+/* Action button reuse */
+.action-btn {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
