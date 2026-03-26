@@ -446,7 +446,8 @@ Generate at least 8 test cases covering positive, negative, and edge cases.`;
               </button>
             </div>
           </div>
-          <TestCaseTable testCases={testCases} format={format} />
+          <TestCaseTable testCases={testCases} format={format} onFormatChange={(newFormat) => setFormat(newFormat)}
+/>
         </div>
       )}
     </div>

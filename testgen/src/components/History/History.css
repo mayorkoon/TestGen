@@ -112,7 +112,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 400px;
+  max-width: 300px;
 }
 
 .history-card__meta {
@@ -147,6 +147,22 @@
   border-color: var(--danger);
   color: var(--danger);
   background: rgba(248, 113, 113, 0.08);
+}
+
+/* Format Toggle in History */
+.history-format-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+
+.toggle-btn.small {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 6px;
 }
 
 /* History Card Body */
@@ -189,7 +205,6 @@
   gap: 10px;
 }
 
-/* Reuse tc-card styles from TestGen.css */
 .history-tc-card .tc-card__left {
   display: flex;
   align-items: center;
@@ -210,7 +225,7 @@
   animation: fadeUp 0.2s ease;
 }
 
-/* Action button reuse */
+/* Action button */
 .action-btn {
   padding: 6px 12px;
   border-radius: var(--radius);
