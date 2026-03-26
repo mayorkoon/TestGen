@@ -1,11 +1,11 @@
-require("dotenv").config({ path: ".env.development" });
-console.log("API KEY:", process.env.ANTHROPIC_API_KEY ? "loaded" : "NOT FOUND");
+require("dotenv").config({
+  path: process.env.NODE_ENV === "production" ? ".env.production" : ".env.development",
+});
+
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccount.json");
-
 
 // ─── Firebase Admin Init ───────────────────────────────────────────────────────
 admin.initializeApp({
@@ -23,10 +23,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const PORT = process.env.PORT || 4000;
+
 // ─── Jira OAuth Constants ──────────────────────────────────────────────────────
-const JIRA_CLIENT_ID = process.env.JIRA_CLIENT_ID 
-const JIRA_CLIENT_SECRET = process.env.JIRA_CLIENT_SECRET 
-const JIRA_REDIRECT_URI = process.env.JIRA_REDIRECT_URI 
+const JIRA_CLIENT_ID = process.env.JIRA_CLIENT_ID;
+const JIRA_CLIENT_SECRET = process.env.JIRA_CLIENT_SECRET;
+const JIRA_REDIRECT_URI = process.env.JIRA_REDIRECT_URI || "http://localhost:4000/auth/jira/callback";
 const JIRA_SCOPES = "read:jira-work read:jira-user offline_access";
 
 // ─── Claude API Proxy ──────────────────────────────────────────────────────────
@@ -48,15 +50,12 @@ app.post("/api/generate", async (req, res) => {
     const errorData = err.response?.data;
     console.error("Anthropic error:", errorData);
 
-    // Return specific error messages
     if (errorData?.error?.type === "authentication_error") {
       return res.status(401).json({ error: "Invalid API key. Please check your Anthropic API key." });
     }
-
     if (errorData?.error?.message?.includes("credit balance is too low")) {
       return res.status(402).json({ error: "Insufficient credits. Please top up your Anthropic account at console.anthropic.com → Plans & Billing." });
     }
-
     if (errorData?.error?.type === "rate_limit_error") {
       return res.status(429).json({ error: "Rate limit reached. Please wait a moment and try again." });
     }
@@ -68,6 +67,7 @@ app.post("/api/generate", async (req, res) => {
 // ─── Jira OAuth Step 1: Start ──────────────────────────────────────────────────
 app.get("/auth/jira/start", (req, res) => {
   const { uid } = req.query;
+  if (!uid) return res.status(400).send("Missing uid");
   const url = `https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=${JIRA_CLIENT_ID}&scope=${encodeURIComponent(JIRA_SCOPES)}&redirect_uri=${encodeURIComponent(JIRA_REDIRECT_URI)}&state=${uid}&response_type=code&prompt=consent`;
   res.redirect(url);
 });
@@ -75,19 +75,23 @@ app.get("/auth/jira/start", (req, res) => {
 // ─── Jira OAuth Step 2: Callback ──────────────────────────────────────────────
 app.get("/auth/jira/callback", async (req, res) => {
   const { code, state: uid } = req.query;
+  if (!code || !uid) return res.status(400).send("Missing code or state");
+
   try {
-    // Exchange code for tokens
-    const tokenRes = await axios.post("https://auth.atlassian.com/oauth/token", {
-      grant_type: "authorization_code",
-      client_id: JIRA_CLIENT_ID,
-      client_secret: JIRA_CLIENT_SECRET,
-      code,
-      redirect_uri: JIRA_REDIRECT_URI,
-    });
+    const tokenRes = await axios.post(
+      "https://auth.atlassian.com/oauth/token",
+      {
+        grant_type: "authorization_code",
+        client_id: JIRA_CLIENT_ID,
+        client_secret: JIRA_CLIENT_SECRET,
+        code,
+        redirect_uri: JIRA_REDIRECT_URI,
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
 
     const { access_token, refresh_token, expires_in } = tokenRes.data;
 
-    // Get accessible Jira sites
     const sitesRes = await axios.get(
       "https://api.atlassian.com/oauth/token/accessible-resources",
       {
@@ -98,9 +102,12 @@ app.get("/auth/jira/callback", async (req, res) => {
       }
     );
 
+    if (!sitesRes.data || sitesRes.data.length === 0) {
+      return res.status(400).send("No Jira sites found for this account.");
+    }
+
     const site = sitesRes.data[0];
 
-    // Save tokens to Firestore
     await db.collection("jira_tokens").doc(uid).set({
       access_token,
       refresh_token,
@@ -111,16 +118,16 @@ app.get("/auth/jira/callback", async (req, res) => {
       updatedAt: new Date(),
     });
 
-    // Close popup and notify parent window
     res.send(`
       <html>
         <body style="background:#080c14;color:#e8edf5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
           <div style="text-align:center">
             <div style="font-size:48px;margin-bottom:16px">⚡</div>
-            <h2 style="color:#4f8ef7;margin-bottom:8px">Jira Connected!</h2>
-            <p style="color:#7a8fa8">You can close this window and return to TestGen.</p>
+            <h2 style="color:#4f8ef7;margin:0 0 8px">Jira Connected!</h2>
+            <p style="color:#7a8fa8">Connected to <strong style="color:#e8edf5">${site.name}</strong></p>
+            <p style="color:#4a5a70;font-size:13px">You can close this window and return to TestGen.</p>
             <script>
-              window.opener && window.opener.postMessage("jira_connected", "*");
+              if (window.opener) window.opener.postMessage("jira_connected", "*");
               setTimeout(() => window.close(), 2000);
             </script>
           </div>
@@ -129,28 +136,38 @@ app.get("/auth/jira/callback", async (req, res) => {
     `);
   } catch (err) {
     console.error("Jira OAuth error:", err.response?.data || err.message);
-    res.status(500).send("OAuth failed: " + (err.response?.data?.message || err.message));
+    res.status(500).send(`
+      <html>
+        <body style="background:#080c14;color:#f87171;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+          <div style="text-align:center">
+            <h2>Connection Failed</h2>
+            <p>${err.response?.data?.message || err.message}</p>
+            <script>setTimeout(() => window.close(), 3000);</script>
+          </div>
+        </body>
+      </html>
+    `);
   }
 });
 
-// ─── Jira Token Helper: Get valid (refresh if expired) ────────────────────────
+// ─── Jira Token Helper ─────────────────────────────────────────────────────────
 async function getValidJiraToken(uid) {
   const doc = await db.collection("jira_tokens").doc(uid).get();
-
-  if (!doc.exists) {
-    throw new Error("Jira not connected. Please connect Jira first.");
-  }
+  if (!doc.exists) throw new Error("Jira not connected. Please connect Jira first.");
 
   const data = doc.data();
 
-  // Refresh token if expired (or about to expire in 60s)
   if (Date.now() > data.expires_at - 60000) {
-    const refreshRes = await axios.post("https://auth.atlassian.com/oauth/token", {
-      grant_type: "refresh_token",
-      client_id: JIRA_CLIENT_ID,
-      client_secret: JIRA_CLIENT_SECRET,
-      refresh_token: data.refresh_token,
-    });
+    const refreshRes = await axios.post(
+      "https://auth.atlassian.com/oauth/token",
+      {
+        grant_type: "refresh_token",
+        client_id: JIRA_CLIENT_ID,
+        client_secret: JIRA_CLIENT_SECRET,
+        refresh_token: data.refresh_token,
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
 
     const { access_token, refresh_token, expires_in } = refreshRes.data;
 
@@ -190,14 +207,12 @@ app.post("/api/jira", async (req, res) => {
     const issueType = data.fields?.issuetype?.name || "";
     const status = data.fields?.status?.name || "";
 
-    // Recursively extract all text from Atlassian Document Format
     const extractText = (node) => {
       if (!node) return "";
       if (node.type === "text") return node.text || "";
       if (node.type === "hardBreak") return "\n";
       if (node.content && Array.isArray(node.content)) {
         const text = node.content.map(extractText).join("");
-        // Add newlines for block elements
         if (["paragraph", "heading", "bulletList", "orderedList", "listItem", "blockquote"].includes(node.type)) {
           return text + "\n";
         }
@@ -221,14 +236,7 @@ Description:
 ${description}
     `.trim();
 
-    console.log("Jira formatted content:\n", formatted);
-
-    res.json({
-      raw: data,
-      summary,
-      description,
-      formatted,
-    });
+    res.json({ raw: data, summary, description, formatted });
   } catch (err) {
     console.error("Jira fetch error:", err.response?.data || err.message);
     res.status(500).json({ error: err.message || "Failed to fetch Jira ticket" });
@@ -238,6 +246,7 @@ ${description}
 // ─── Check Jira Connection Status ─────────────────────────────────────────────
 app.get("/auth/jira/status", async (req, res) => {
   const { uid } = req.query;
+  if (!uid) return res.json({ connected: false });
   try {
     const doc = await db.collection("jira_tokens").doc(uid).get();
     if (doc.exists) {
@@ -252,7 +261,8 @@ app.get("/auth/jira/status", async (req, res) => {
 
 // ─── Disconnect Jira ───────────────────────────────────────────────────────────
 app.delete("/auth/jira/disconnect", async (req, res) => {
-  const { uid } = req.body;
+  const { uid } = req.query;
+  if (!uid) return res.status(400).json({ error: "Missing uid" });
   try {
     await db.collection("jira_tokens").doc(uid).delete();
     res.json({ success: true });
@@ -262,4 +272,4 @@ app.delete("/auth/jira/disconnect", async (req, res) => {
 });
 
 // ─── Start Server ──────────────────────────────────────────────────────────────
-app.listen(4000, () => console.log("Proxy running on http://localhost:4000"));
+app.listen(PORT, () => console.log(`Proxy running on http://localhost:${PORT}`));
