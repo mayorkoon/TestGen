@@ -20,9 +20,9 @@ app.use(cors());
 app.use(express.json());
 
 // ─── Jira OAuth Constants ──────────────────────────────────────────────────────
-const JIRA_CLIENT_ID = process.env.JIRA_CLIENT_ID || "CdhroVzMc6sMZqsOiu78VXl9LRFZFTKM";
-const JIRA_CLIENT_SECRET = process.env.JIRA_CLIENT_SECRET || "ATOA2PYgnY544OgOrnFQkQGa3HJnqmh1Pu2lAPAOMl55wQRsZ1YMP_QxkcT4SrrPzyaz21A779AF";
-const JIRA_REDIRECT_URI = process.env.JIRA_REDIRECT_URI || "http://localhost:4000/auth/jira/callback";
+const JIRA_CLIENT_ID = process.env.JIRA_CLIENT_ID 
+const JIRA_CLIENT_SECRET = process.env.JIRA_CLIENT_SECRET 
+const JIRA_REDIRECT_URI = process.env.JIRA_REDIRECT_URI 
 const JIRA_SCOPES = "read:jira-work read:jira-user offline_access";
 
 // ─── Claude API Proxy ──────────────────────────────────────────────────────────
