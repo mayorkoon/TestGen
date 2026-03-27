@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./TestGen.css";
 
-function TestCaseTable({ testCases, format, onFormatChange }) {
+function TestCaseTable({ testCases, format, onFormatChange, onDelete }) {
   const [expanded, setExpanded] = useState(null);
 
   // ─── Format conversion helpers ───────────────────────────────────────────────
@@ -50,6 +50,14 @@ function TestCaseTable({ testCases, format, onFormatChange }) {
     return "type--edge";
   };
 
+  // ─── Handle delete ────────────────────────────────────────────────────────────
+  const handleDelete = (e, index) => {
+    e.stopPropagation();
+    if (expanded === index) setExpanded(null);
+    else if (expanded > index) setExpanded(expanded - 1);
+    onDelete(index);
+  };
+
   return (
     <div className="tc-table-wrapper">
 
@@ -91,6 +99,13 @@ function TestCaseTable({ testCases, format, onFormatChange }) {
               <div className="tc-card__right">
                 <span className={`tc-badge ${priorityColor(tc.priority)}`}>{tc.priority}</span>
                 <span className={`tc-badge ${typeColor(tc.type)}`}>{tc.type}</span>
+                <button
+                  className="tc-delete-btn"
+                  onClick={(e) => handleDelete(e, i)}
+                  title="Remove test case"
+                >
+                  ✕
+                </button>
                 <span className="tc-chevron">{expanded === i ? "▲" : "▼"}</span>
               </div>
             </div>

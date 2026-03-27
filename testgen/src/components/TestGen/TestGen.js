@@ -218,6 +218,12 @@ Generate at least 8 test cases covering positive, negative, and edge cases.`;
 
     setLoading(false);
   };
+  const handleDeleteTestCase = (index) => {
+    const updated = testCases.filter((_, i) => i !== index);
+    setTestCases(updated);
+    setSavedTestCases(updated);
+    if (saved) setSaved(false); // reset saved state since list changed
+  };
 
   const handleSave = async () => {
     try {
@@ -448,8 +454,7 @@ const handleExport = () => {
               </button>
             </div>
           </div>
-          <TestCaseTable testCases={testCases} format={format} onFormatChange={(newFormat) => setFormat(newFormat)}
-/>
+          <TestCaseTable testCases={testCases} format={format} onFormatChange={(newFormat) => setFormat(newFormat)} onDelete={handleDeleteTestCase}/>
         </div>
       )}
     </div>
