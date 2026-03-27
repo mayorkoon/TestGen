@@ -225,16 +225,19 @@ app.post("/api/jira", async (req, res) => {
       ? extractText(data.fields.description).trim()
       : "No description provided.";
 
-    const formatted = `
-Ticket: ${ticketId}
-Type: ${issueType}
-Status: ${status}
-Priority: ${priority}
-Summary: ${summary}
+      const sanitizedDescription = description.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
 
-Description:
-${description}
-    `.trim();
+
+    const formatted = `
+    Ticket: ${ticketId}
+    Type: ${issueType}
+    Status: ${status}
+    Priority: ${priority}
+    Summary: ${summary}
+
+    Description:
+    ${sanitizedDescription}
+        `.trim();
 
     res.json({ raw: data, summary, description, formatted });
   } catch (err) {

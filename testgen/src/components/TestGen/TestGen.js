@@ -138,7 +138,7 @@ Generate at least 8 test cases covering positive, negative, and edge cases.`;
     }
   };
 
-  const callClaudeAPI = async (requirements) => {
+const callClaudeAPI = async (requirements) => {
   const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -156,8 +156,21 @@ Generate at least 8 test cases covering positive, negative, and edge cases.`;
 
   const data = await response.json();
   const text = data.content.map((c) => c.text || "").join("");
-  const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+
+  // Extract JSON array from response more robustly
+  const jsonMatch = text.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) throw new Error("Could not parse test cases from response. Please try again.");
+
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch (parseErr) {
+    // Try cleaning the string before parsing
+    const clean = jsonMatch[0]
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // remove control characters
+      .replace(/,\s*]/g, "]")                          // remove trailing commas
+      .replace(/,\s*}/g, "}");                         // remove trailing commas in objects
+    return JSON.parse(clean);
+  }
 };
 
   const fetchJiraTicket = async () => {
