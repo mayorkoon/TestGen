@@ -41,15 +41,15 @@ function History() {
   const toGherkin = (tc) => ({
     scenario: tc.scenario || tc.title,
     given: tc.given || (tc.preconditions ? [tc.preconditions] : ["The system is available and the user is authenticated"]),
-    when: tc.when || (Array.isArray(tc.steps) && tc.steps.length > 0 ? [tc.steps[0]] : ["The user performs the action"]),
+    when: tc.when || (Array.isArray(tc.steps) && tc.steps.length > 0 ? tc.steps : ["The user performs the action"]),
     then: tc.then || (tc.expectedResult ? [tc.expectedResult] : ["The expected result is met"]),
   });
 
   const toPlain = (tc) => ({
-    preconditions: tc.preconditions || (Array.isArray(tc.given) ? tc.given.join(". ") : tc.given || ""),
-    steps: tc.steps || tc.when || [],
-    expectedResult: tc.expectedResult || (Array.isArray(tc.then) ? tc.then.join(". ") : tc.then || ""),
-  });
+  preconditions: tc.preconditions || (Array.isArray(tc.given) ? tc.given.join(". ") : tc.given || ""),
+  steps: tc.steps || (Array.isArray(tc.when) ? tc.when : tc.when ? [tc.when] : []),
+  expectedResult: tc.expectedResult || (Array.isArray(tc.then) ? tc.then.join(". ") : tc.then || ""),
+});
 
   const getActiveFormat = (record) => viewFormat[record.id] || record.format;
 

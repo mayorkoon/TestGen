@@ -240,39 +240,41 @@ Generate at least 8 test cases covering positive, negative, and edge cases.`;
     }
   };
 
-  const handleExport = () => {
-    const rows = testCases.map((tc) => {
-      if (format === FORMAT_TYPES.PLAIN) {
-        return {
-          "Test Case ID": tc.id,
-          Title: tc.title,
-          Preconditions: tc.preconditions,
-          "Test Steps": Array.isArray(tc.steps) ? tc.steps.join("\n") : tc.steps,
-          "Expected Result": tc.expectedResult,
-          Priority: tc.priority,
-          Type: tc.type,
-        };
-      } else {
-        return {
-          "Test Case ID": tc.id,
-          Title: tc.title,
-          Scenario: tc.scenario,
-          Given: Array.isArray(tc.given) ? tc.given.join("\n") : tc.given,
-          When: Array.isArray(tc.when) ? tc.when.join("\n") : tc.when,
-          Then: Array.isArray(tc.then) ? tc.then.join("\n") : tc.then,
-          Priority: tc.priority,
-          Type: tc.type,
-        };
-      }
-    });
+const handleExport = () => {
+  const rows = testCases.map((tc) => {
+    if (format === FORMAT_TYPES.PLAIN) {
+      return {
+        "Jira Ticket": inputType === INPUT_TYPES.JIRA ? jiraTicket : "",
+        "Test Case ID": tc.id,
+        "Title": tc.title,
+        "Preconditions": tc.preconditions,
+        "Test Steps": Array.isArray(tc.steps) ? tc.steps.join("\n") : tc.steps,
+        "Expected Result": tc.expectedResult,
+        "Priority": tc.priority,
+        "Type": tc.type,
+      };
+    } else {
+      return {
+        "Jira Ticket": inputType === INPUT_TYPES.JIRA ? jiraTicket : "",
+        "Test Case ID": tc.id,
+        "Title": tc.title,
+        "Scenario": tc.scenario || tc.title,
+        "Given": Array.isArray(tc.given) ? tc.given.join("\n") : tc.given,
+        "When": Array.isArray(tc.when) ? tc.when.join("\n") : tc.when,
+        "Then": Array.isArray(tc.then) ? tc.then.join("\n") : tc.then,
+        "Priority": tc.priority,
+        "Type": tc.type,
+      };
+    }
+  });
 
-    const ws = XLSX.utils.json_to_sheet(rows);
+   const ws = XLSX.utils.json_to_sheet(rows);
     ws["!cols"] = Object.keys(rows[0] || {}).map(() => ({ wch: 30 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Test Cases");
     const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([buf], { type: "application/octet-stream" }), "TestGen_TestCases.xlsx");
-  };
+    saveAs(new Blob([buf], { type: "application/octet-stream" }), `TestGen_${jiraTicket || "TestCases"}.xlsx`);
+};
 
   return (
     <div className="testgen">

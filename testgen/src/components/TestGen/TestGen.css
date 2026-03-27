@@ -584,3 +584,35 @@
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
+
+/* Gherkin list with And keyword */
+.tc-gherkin__list {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tc-gherkin__item {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.tc-gherkin__keyword-and {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.tc-gherkin__text {
+  flex: 1;
+}
